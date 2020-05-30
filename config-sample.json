@@ -1,0 +1,16 @@
+{
+    "whitelist": {
+        "categories": [
+            "drinking",
+            "420",
+            "weekend"
+        ],
+    },
+    "blacklist": 
+        "categories": [
+            "mom",
+            "seasonal",
+            "animated-text"
+        ]
+    }
+}
