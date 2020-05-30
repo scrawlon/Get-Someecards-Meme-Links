@@ -3,17 +3,19 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 
 const config = require('./config.json');
+const baseUrl = 'https://www.someecards.com/'; 
+const linkSelector = '.card > a';
 
-async function loadAllCardElements(page, selector) {
+async function loadAllCardElements(page) {
 	let preCount = 0;
 	let postCount = 0;
 
 	do {
-		preCount = await page.$$eval(selector, elements => elements.length);
+		preCount = await page.$$eval(linkSelector, elements => elements.length);
 		await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
 		await page.waitFor(500);
-		await page.waitForSelector(selector, { visible: true });
-		postCount = await page.$$eval(selector, elements => elements.length);
+		await page.waitForSelector(linkSelector, { visible: true });
+		postCount = await page.$$eval(linkSelector, elements => elements.length);
 	} while ( postCount > preCount );
 
 	console.log(`preCount: ${preCount}, postCount: ${postCount}`);
@@ -21,18 +23,18 @@ async function loadAllCardElements(page, selector) {
 	return Promise.resolve();
 }
 
-async function getAllLinks(page, selector) {
-	return await page.$$eval(selector, cardLinkElements => {
+async function getAllLinks(page) {
+	return await page.$$eval(linkSelector, (cardLinkElements, baseUrl) => {
 		let allCardLinks = [];
 			
 		for ( const link of cardLinkElements ) {
-			if ( link && link.href ) {
-				allCardLinks.push(link.href);
-			}
+			const urlPath = link.href.replace(baseUrl, ''); 
+			
+			allCardLinks.push(urlPath);
 		}
 
 		return Promise.resolve(allCardLinks);
-	});
+	}, baseUrl);
 }
 
 (async () => {
@@ -52,11 +54,11 @@ async function getAllLinks(page, selector) {
 	});
 
 	/* Load Someecard categories from window.__APP_STATE__ JavaScript variable */ 
-  await page.goto('https://www.someecards.com/card/categories/');
+  await page.goto( `${baseUrl}card/categories/`);
 	const seAppState = await page.evaluate(() => window.__APP_STATE__);
 	const { allCardCategories: { allCardCategories: { categories, eventsByMonth } } } = seAppState;
 
-	if ( ! categories || ! eventsByMonth ) return false;
+	if ( ! categories || ! eventsByMonth ) process.exit(1);
 	
 	/* Load config.json options */
 	const { 
@@ -69,6 +71,7 @@ async function getAllLinks(page, selector) {
 	const includeAll = ! useWhitelist && ! useBlacklist;
 	
 	let seCardLinks = {
+		baseUrl,
 		categories: {},
 		eventsByMonth: {}
 	};
@@ -79,10 +82,9 @@ async function getAllLinks(page, selector) {
 
 		if ( includeAll || ( whitelistAllowed || blacklistAllowed ) ) {
 			console.log(category.canonicalUrl);
-			const selector = '.card > a';
 			await page.goto(category.canonicalUrl, { waitUntil: 'networkidle0' });
-			await loadAllCardElements(page, selector);
-			const links = await getAllLinks(page, selector);
+			await loadAllCardElements(page);
+			const links = await getAllLinks(page);
 
 			console.log(links);
 			
