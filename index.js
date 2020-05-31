@@ -50,6 +50,37 @@ async function getAllLinks(page) {
 	}, baseUrl);
 }
 
+async function getCategoryLinks(page, categories) {
+	let categoryLinks = {};
+
+	/* Load config.json options */
+	const { 
+		whitelist: { categories: categoriesWhitelist = [] } = {},
+		blacklist: { categories: categoriesBlacklist = [] } = {}
+	} = config;
+
+	const useWhitelist = categoriesWhitelist.length > 0;
+	const useBlacklist = ! useWhitelist && categoriesBlacklist.length > 0; 
+	const includeAll = ! useWhitelist && ! useBlacklist;
+
+  for ( const category of categories ) {
+		const whitelistAllowed = useWhitelist && categoriesWhitelist.includes(category.slug);
+		const blacklistAllowed = useBlacklist && ! categoriesBlacklist.includes(category.slug); 
+
+		if ( includeAll || ( whitelistAllowed || blacklistAllowed ) ) {
+			await page.goto(category.canonicalUrl, { waitUntil: 'networkidle0' });
+			await loadAllCardElements(page);
+			const links = await getAllLinks(page);
+			
+			categoryLinks[category.slug] = links;
+
+			console.log(`Category: ${category.name}, Total links: ${links.length}`);
+    }
+	}
+
+	return Promise.resolve(categoryLinks);
+}
+
 (async () => {
   const browser = await puppeteer.launch();
 	const page = await browser.newPage();
@@ -63,38 +94,15 @@ async function getAllLinks(page) {
 	const { allCardCategories: { allCardCategories: { categories, eventsByMonth } } } = seAppState;
 
 	if ( ! categories || ! eventsByMonth ) process.exit(1);
-	
-	/* Load config.json options */
-	const { 
-		whitelist: { categories: categoriesWhitelist = [] } = {},
-		blacklist: { categories: categoriesBlacklist = [] } = {}
-	} = config;
 
-	const useWhitelist = categoriesWhitelist.length > 0;
-	const useBlacklist = ! useWhitelist && categoriesBlacklist.length > 0; 
-	const includeAll = ! useWhitelist && ! useBlacklist;
+	const categoryLinks = await getCategoryLinks(page, categories);
 	
 	let seCardLinks = {
 		baseUrl,
-		categories: {},
-		eventsByMonth: {}
+		categories: categoryLinks,
+		eventsByMonth
 	};
-
-  for ( const category of categories ) {
-		const whitelistAllowed = useWhitelist && categoriesWhitelist.includes(category.slug);
-		const blacklistAllowed = useBlacklist && ! categoriesBlacklist.includes(category.slug); 
-
-		if ( includeAll || ( whitelistAllowed || blacklistAllowed ) ) {
-			await page.goto(category.canonicalUrl, { waitUntil: 'networkidle0' });
-			await loadAllCardElements(page);
-			const links = await getAllLinks(page);
-			
-			seCardLinks.categories[category.slug] = links;
-
-			console.log(`Category: ${category.name}, Total links: ${links.length}`);
-    }
-	}
-
+	
 	fs.writeFileSync('./ecard-links.json', JSON.stringify(seCardLinks));
 
   await browser.close();
