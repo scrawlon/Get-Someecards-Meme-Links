@@ -6,6 +6,21 @@ const config = require('./config.json');
 const baseUrl = 'https://www.someecards.com/'; 
 const linkSelector = '.card > a';
 
+async function ignoreVisualElements(page) {
+	await page.setRequestInterception(true);
+  page.on('request', (req) => {
+		const visualElements = ['image', 'stylesheet', 'font'];
+
+		if ( visualElements.includes(req.resourceType()) ) {
+			req.abort();
+    } else {
+			req.continue();
+    }
+	});
+
+	return Promise.resolve();
+}
+
 async function loadAllCardElements(page) {
 	let preCount = 0;
 	let postCount = 0;
@@ -17,8 +32,6 @@ async function loadAllCardElements(page) {
 		await page.waitForSelector(linkSelector, { visible: true });
 		postCount = await page.$$eval(linkSelector, elements => elements.length);
 	} while ( postCount > preCount );
-
-	console.log(`preCount: ${preCount}, postCount: ${postCount}`);
 
 	return Promise.resolve();
 }
@@ -42,16 +55,7 @@ async function getAllLinks(page) {
 	const page = await browser.newPage();
 
 	/* Improve script speed by not loading visual resources */
-	await page.setRequestInterception(true);
-  page.on('request', (req) => {
-		const visualElements = ['image', 'stylesheet', 'font'];
-
-		if ( visualElements.includes(req.resourceType()) ) {
-			req.abort();
-    } else {
-			req.continue();
-    }
-	});
+	await ignoreVisualElements(page);
 
 	/* Load Someecard categories from window.__APP_STATE__ JavaScript variable */ 
   await page.goto( `${baseUrl}card/categories/`);
@@ -81,14 +85,13 @@ async function getAllLinks(page) {
 		const blacklistAllowed = useBlacklist && ! categoriesBlacklist.includes(category.slug); 
 
 		if ( includeAll || ( whitelistAllowed || blacklistAllowed ) ) {
-			console.log(category.canonicalUrl);
 			await page.goto(category.canonicalUrl, { waitUntil: 'networkidle0' });
 			await loadAllCardElements(page);
 			const links = await getAllLinks(page);
-
-			console.log(links);
 			
 			seCardLinks.categories[category.slug] = links;
+
+			console.log(`Category: ${category.name}, Total links: ${links.length}`);
     }
 	}
 
