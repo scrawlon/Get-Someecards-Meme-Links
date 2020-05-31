@@ -94,12 +94,10 @@ async function getCategoryLinks(page, categories) {
 	const { allCardCategories: { allCardCategories: { categories, eventsByMonth } } } = seAppState;
 
 	if ( ! categories || ! eventsByMonth ) process.exit(1);
-
-	const categoryLinks = await getCategoryLinks(page, categories);
 	
 	let seCardLinks = {
 		baseUrl,
-		categories: categoryLinks,
+		categories: await getCategoryLinks(page, categories),
 		eventsByMonth
 	};
 	
