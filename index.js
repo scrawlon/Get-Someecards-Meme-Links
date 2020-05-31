@@ -74,11 +74,32 @@ async function getCategoryLinks(page, categories) {
 			
 			categoryLinks[category.slug] = links;
 
-			console.log(`Category: ${category.name}, Total links: ${links.length}`);
+			console.log(`Category: ${category.name}, Total Links: ${links.length}`);
     }
 	}
 
 	return Promise.resolve(categoryLinks);
+}
+
+async function getEventsByMonthLinks(page, eventsByMonth) {
+	const months = Object.entries(eventsByMonth);
+
+	for ( const [key, val] of months ) {
+		const { events } = val;
+		let count = 0;
+
+		for ( const event of events ) {
+			await page.goto(`${baseUrl}memes/${event.slug}`, { waitUntil: 'networkidle0' });
+			await loadAllCardElements(page);
+			const links = await getAllLinks(page);
+			
+			eventsByMonth[key]['events'][count]['urls'] = links;
+			count++;
+			console.log(`Month: ${key}, Event: ${event.name}, Total Links: ${links.length}`);
+		}
+	}
+
+	return Promise.resolve(eventsByMonth);
 }
 
 (async () => {
@@ -98,7 +119,7 @@ async function getCategoryLinks(page, categories) {
 	let seCardLinks = {
 		baseUrl,
 		categories: await getCategoryLinks(page, categories),
-		eventsByMonth
+		eventsByMonth: await getEventsByMonthLinks(page, eventsByMonth)
 	};
 	
 	fs.writeFileSync('./ecard-links.json', JSON.stringify(seCardLinks));
