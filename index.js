@@ -2,6 +2,7 @@ const fs = require('fs');
 
 const puppeteer = require('puppeteer');
 
+const cliArgs = process.argv.slice(2);
 const config = require('./config.json');
 const baseUrl = 'https://www.someecards.com/'; 
 const linkSelector = '.card > a';
@@ -102,6 +103,19 @@ async function getEventsByMonthLinks(page, eventsByMonth) {
 	return Promise.resolve(eventsByMonth);
 }
 
+function processCliArgs(categories) {
+	const [ option ] = cliArgs;
+
+	switch ( option ) {
+		case '-lcs':
+			const categorySlugs = categories.map(category => category.slug);
+			console.log(categorySlugs);
+			break;
+		default:
+			console.log(`Unrecognized option, "${option}".`);
+	}
+}
+
 (async () => {
   const browser = await puppeteer.launch();
 	const page = await browser.newPage();
@@ -114,7 +128,13 @@ async function getEventsByMonthLinks(page, eventsByMonth) {
 	const seAppState = await page.evaluate(() => window.__APP_STATE__);
 	const { allCardCategories: { allCardCategories: { categories, eventsByMonth } } } = seAppState;
 
-	if ( ! categories || ! eventsByMonth ) process.exit(1);
+	if ( ! categories || ! eventsByMonth ) {
+		process.exit(1);
+	} else if ( cliArgs.length ) {
+		processCliArgs(categories);
+
+		process.exit(1);
+	}
 	
 	let seCardLinks = {
 		baseUrl,
