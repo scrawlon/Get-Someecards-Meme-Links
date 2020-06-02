@@ -10,7 +10,7 @@ try {
 	config = require('./config.json');
 	console.log(`Config file found. Running with selected options.`);
 } catch {
-	console.log(`Config file note found. Running with default options.`);
+	console.log(`Config file not found. Running with default options.`);
 }
 
 const baseUrl = 'https://www.someecards.com/'; 
