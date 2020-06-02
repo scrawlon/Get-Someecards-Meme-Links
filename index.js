@@ -3,7 +3,16 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 
 const cliArgs = process.argv.slice(2);
-const config = require('./config.json');
+
+let config = {}
+
+try {
+	config = require('./config.json');
+	console.log(`Config file found. Running with selected options.`);
+} catch {
+	console.log(`Config file note found. Running with default options.`);
+}
+
 const baseUrl = 'https://www.someecards.com/'; 
 const linkSelector = '.card > a';
 

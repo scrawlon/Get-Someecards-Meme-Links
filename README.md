@@ -1,6 +1,20 @@
 # Get Someecards Meme Ecard Links By Category and Month
 Scrape a list of meme ecard URLs from the [Someecards.com](https://www.someecards.com/) website. Built with Node.js and [Puppeteer](https://github.com/puppeteer/puppeteer).
 
+## Installation
+Clone the repo and install dependencies:
+```
+git clone git@github.com:scrawlon/Get-Someecards-Meme-Links.git
+```
+
+```
+cd Get-Someecards-Meme-Links
+```
+
+```
+npm install
+```
+
 ## How to use
 To run, type:
 
