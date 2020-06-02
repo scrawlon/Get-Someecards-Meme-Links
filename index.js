@@ -17,15 +17,15 @@ const baseUrl = 'https://www.someecards.com/';
 const linkSelector = '.card > a';
 
 async function ignoreVisualElements(page) {
-	await page.setRequestInterception(true);
-  page.on('request', (req) => {
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
 		const visualElements = ['image', 'stylesheet', 'font'];
 
 		if ( visualElements.includes(req.resourceType()) ) {
 			req.abort();
-    } else {
-			req.continue();
-    }
+        } else {
+            req.continue();
+        }
 	});
 
 	return Promise.resolve();
@@ -131,14 +131,14 @@ function processCliArgs(categories) {
 }
 
 (async () => {
-  const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch();
 	const page = await browser.newPage();
 
 	/* Improve script speed by not loading visual resources */
 	await ignoreVisualElements(page);
 
 	/* Load Someecard categories from window.__APP_STATE__ JavaScript variable */ 
-  await page.goto( `${baseUrl}card/categories/`);
+    await page.goto( `${baseUrl}card/categories/`);
 	const seAppState = await page.evaluate(() => window.__APP_STATE__);
 	const { allCardCategories: { allCardCategories: { categories, eventsByMonth } } } = seAppState;
 
@@ -148,8 +148,8 @@ function processCliArgs(categories) {
 		processCliArgs(categories);
 
 		process.exit(1);
-	}
-	
+    }
+    
 	let seCardLinks = {
 		baseUrl,
 		categories: await getCategoryLinks(page, categories),
@@ -158,5 +158,5 @@ function processCliArgs(categories) {
 	
 	fs.writeFileSync('./ecard-links.json', JSON.stringify(seCardLinks));
 
-  await browser.close();
+    await browser.close();
 })();
