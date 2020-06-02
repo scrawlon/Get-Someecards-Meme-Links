@@ -38,8 +38,12 @@ async function loadAllCardElements(page) {
 	do {
 		preCount = await page.$$eval(linkSelector, elements => elements.length);
 		await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-		await page.waitFor(500);
-		await page.waitForSelector(linkSelector, { visible: true });
+
+		try {
+			await page.waitForSelector(linkSelector, { visible: true }, { timeout: 500 });
+		} catch {
+			return Promise.resolve();
+		}
 		postCount = await page.$$eval(linkSelector, elements => elements.length);
 	} while ( postCount > preCount );
 
