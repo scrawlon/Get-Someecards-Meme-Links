@@ -38,13 +38,14 @@ async function loadAllCardElements(page) {
 	do {
 		preCount = await page.$$eval(linkSelector, elements => elements.length);
 		await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+		await page.waitFor(500);
 
 		try {
-			await page.waitForSelector(linkSelector, { visible: true }, { timeout: 500 });
+			await page.waitForSelector(linkSelector, { visible: true, timeout: 500 });
+			postCount = await page.$$eval(linkSelector, elements => elements.length);
 		} catch {
 			return Promise.resolve();
 		}
-		postCount = await page.$$eval(linkSelector, elements => elements.length);
 	} while ( postCount > preCount );
 
 	return Promise.resolve();
@@ -89,7 +90,7 @@ async function getCategoryLinks(page, categories) {
 			categoryLinks[category.slug] = links;
 
 			console.log(`Category: ${category.name}, Total Links: ${links.length}`);
-    }
+		}
 	}
 
 	return Promise.resolve(categoryLinks);
