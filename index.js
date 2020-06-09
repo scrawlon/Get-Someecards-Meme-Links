@@ -156,7 +156,7 @@ function processCliArgs(categories) {
 		eventsByMonth: await getEventsByMonthLinks(page, eventsByMonth)
 	};
 	
-	fs.writeFileSync('./ecard-links.json', JSON.stringify(seCardLinks));
+	fs.writeFileSync('./dist/ecard-links.json', JSON.stringify(seCardLinks));
 
     await browser.close();
 })();

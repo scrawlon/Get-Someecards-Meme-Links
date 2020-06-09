@@ -19,10 +19,10 @@ npm install
 To run, type:
 
 ```
-node index.js
+npm run build
 ```
 
-By default, this will collect all ecard URLs and save to ecard-links.json. 
+By default, this will collect all ecard URLs and save to './dist/ecard-links.json'. 
 
 ## Configuration options
 You can include/exclude categories from the output file, using an optional configuration file. Start by copying config-sample.json to config.json. 
