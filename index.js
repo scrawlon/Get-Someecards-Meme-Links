@@ -78,7 +78,7 @@ async function getCategoryLinks(page, categories) {
 	const useBlacklist = ! useWhitelist && categoriesBlacklist.length > 0; 
 	const includeAll = ! useWhitelist && ! useBlacklist;
 
-  for ( const category of categories ) {
+    for ( const category of categories ) {
 		const whitelistAllowed = useWhitelist && categoriesWhitelist.includes(category.slug);
 		const blacklistAllowed = useBlacklist && ! categoriesBlacklist.includes(category.slug); 
 
